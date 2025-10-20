@@ -82,6 +82,12 @@ export const fetchItems = async (db: SQLiteDatabase): Promise<Item[]> => {
   return db.getAllAsync<Item>("SELECT * FROM items;");
 };
 
+//This is a toggle from desending and asending
+export const sortQualityToggle = async(db: SQLiteDatabase, ascending:boolean): Promise<Item[]> => {
+  const order = ascending ? 'ASC' : 'DESC';
+  return db.getAllAsync<Item>(`SELECT * FROM items ORDER BY quantity ${order};`);
+}
+
 /**
  * Update Item
  * 

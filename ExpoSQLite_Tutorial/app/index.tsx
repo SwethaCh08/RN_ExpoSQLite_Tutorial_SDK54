@@ -153,6 +153,14 @@ export default function App() {
   };
 
   /**
+   * # still workin man...
+    const lowToHigh = async () => {
+    sortQualityToggle
+    }
+   */
+ 
+
+  /**
    * Start Edit Function
    *
    * Prepares the form for editing an existing item.
@@ -245,6 +253,15 @@ export default function App() {
         title={editingId === null ? "Save Item" : "Update Item"}
         onPress={saveOrUpdate}
       />
+
+      {/*
+        Sort Button
+       */}
+      <Button
+        title={editingId === null ? "Sort Low to High" : "Sort High to Low"}
+        onPress={lowToHigh}
+      />
+
       <FlatList
         style={styles.list}
         data={items}
