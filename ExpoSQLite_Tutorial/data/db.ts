@@ -78,9 +78,21 @@ export const insertItem = async (
  * @param db - The SQLite database instance
  * @returns Promise that resolves to an array of Item objects
  */
-export const fetchItems = async (db: SQLiteDatabase): Promise<Item[]> => {
-  return db.getAllAsync<Item>("SELECT * FROM items;");
+export const fetchItems = async (db: SQLiteDatabase, sort: string): Promise<Item[]> => {
+  if(sort==="default"){
+    return db.getAllAsync<Item>("SELECT * FROM items");
+  }
+  else if(sort==="a to z"){
+    return db.getAllAsync<Item>("SELECT * FROM items ORDER BY name ASC;");
+  }
+  else if(sort==="z to a"){
+    return db.getAllAsync<Item>("SELECT * FROM items ORDER BY name DESC;");
+  }
+  else{
+    return db.getAllAsync<Item>("SELECT * FROM items");
+  }
 };
+
 
 //This is a toggle from desending and asending
 export const sortQualityToggle = async(db: SQLiteDatabase, ascending:boolean): Promise<Item[]> => {

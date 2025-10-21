@@ -1,3 +1,4 @@
+import AntDesign from '@expo/vector-icons/AntDesign';
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
@@ -9,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Dropdown } from 'react-native-element-dropdown';
 import { deleteItem, fetchItems, insertItem, sortQualityToggle, updateItem, type Item } from "../data/db";
 import ItemRow from "./components/ItemRow";
 
@@ -32,7 +34,7 @@ export default function App() {
   const [quantity, setQuantity] = useState<string>("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [sortAscending, setSortAscending] = useState<boolean>(true);
-
+  const [sortOrder, setSortOrder] = useState<string>("default")
   /**
    * Database State
    *
@@ -52,7 +54,7 @@ export default function App() {
    * not every time loadItems function is redefined.
    */
   useEffect(() => {
-    loadItems();
+    loadItems("default");
   }, []);
 
   /**
@@ -68,9 +70,10 @@ export default function App() {
    *
    * @returns Promise that resolves when items are successfully loaded
    */
-  const loadItems = async () => {
+    const loadItems = async ( order: string ) => {
+    setSortOrder(order);
     try {
-      const value = await fetchItems(db);
+      const value = await fetchItems(db, order);
       setItems(value);
     } catch (err) {
       console.log("Failed to fetch items", err);
@@ -101,8 +104,7 @@ export default function App() {
 
     try {
       await insertItem(db, name, parsedQuantity);
-      await loadItems(); // Refresh the list to show the new item
-
+      await loadItems(sortOrder); // Refresh the list to show the new item
       // Clear form fields
       setName("");
       setQuantity("");
@@ -144,7 +146,7 @@ export default function App() {
       } else {
         await updateItem(db, editingId, name.trim(), parsedQuantity);
       }
-      await loadItems();
+      await loadItems(sortOrder);
       setName("");
       setQuantity("");
       setEditingId(null);
@@ -211,7 +213,7 @@ export default function App() {
         onPress: async () => {
           try {
             await deleteItem(db, id);
-            await loadItems();
+            await loadItems("default");
             if (editingId === id) {
               setEditingId(null);
               setName("");
@@ -224,6 +226,56 @@ export default function App() {
       },
     ]);
   };
+
+  const defaultSort = async () => {
+    try {
+      await loadItems("default");
+    }
+    catch (err) {
+      console.log("Failed to sort list", err)
+    }
+  }
+
+
+  const aToZ = async () => {
+    try {
+      await loadItems("a to z");
+    }
+    catch (err) {
+      console.log("Failed to sort list", err)
+    }
+  }
+  const zToA = async () => {
+    try {
+      await loadItems("z to a");
+    }
+    catch (err) {
+      console.log("Failed to sort list", err)
+    }
+  }
+
+    const data = [ // list of options
+    {label: 'Option 1', value: '1'},
+    {label: 'Option 2', value: '2'},
+  ];
+  const [value, setValue] = useState(null);
+  const [isFocus, setIsFocus] = useState(false);
+
+
+    const renderLabel = () => { // If the dropdown is clicked, show options
+      if (value || isFocus) {
+        return (
+          <Text style={[styles.label, isFocus && { color: 'blue' }]}>
+            Options
+          </Text>
+        );
+      }
+      return null;
+    };
+
+
+
+
 
   return (
     <View style={styles.container}>
@@ -265,6 +317,44 @@ export default function App() {
         title={editingId === null ? "Sort Low to High" : "Sort High to Low"}
         onPress={toggleSort}
       />
+
+      {/*
+        Dropdown list
+        Will contain a list of options to sort the items in the list.
+        Dropdown credits: https://www.npmjs.com/package/react-native-element-dropdown
+      */}
+      <View>
+        {renderLabel()}
+        <Dropdown
+          style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={data}
+          search
+          maxHeight={300}
+          labelField="label"
+          valueField="value"
+          placeholder={!isFocus ? 'Select item' : '...'}
+          searchPlaceholder="Search..."
+          value={value}
+          onFocus={() => setIsFocus(true)}
+          onBlur={() => setIsFocus(false)}
+          onChange={item => {
+            setValue(item.value);
+            setIsFocus(false);
+          }}
+          renderLeftIcon={() => (
+            <AntDesign
+              style={styles.icon}
+              color={isFocus ? 'blue' : 'black'}
+              size={20}
+            />
+          )}
+        />
+      </View>
+
 
       <FlatList
         style={styles.list}
@@ -334,4 +424,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
   },
+  dropdown: {
+      height: 50,
+      borderColor: 'gray',
+      borderWidth: 0.5,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+    },
+    icon: {
+      marginRight: 5,
+    },
+    label: {
+      position: 'absolute',
+      backgroundColor: 'white',
+      left: 22,
+      top: 8,
+      zIndex: 999,
+      paddingHorizontal: 8,
+      fontSize: 14,
+    },
+    placeholderStyle: {
+      fontSize: 16,
+    },
+    selectedTextStyle: {
+      fontSize: 16,
+    },
+    iconStyle: {
+      width: 20,
+      height: 20,
+    },
+    inputSearchStyle: {
+      height: 40,
+      fontSize: 16,
+    },
+
 });
