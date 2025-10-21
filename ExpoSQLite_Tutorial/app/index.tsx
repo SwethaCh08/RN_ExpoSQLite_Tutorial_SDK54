@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { deleteItem, fetchItems, insertItem, updateItem, type Item } from "../data/db";
+import { deleteItem, fetchItems, insertItem, sortQualityToggle, updateItem, type Item } from "../data/db";
 import ItemRow from "./components/ItemRow";
 
 export default function App() {
@@ -31,6 +31,7 @@ export default function App() {
   const [name, setName] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [sortAscending, setSortAscending] = useState<boolean>(true);
 
   /**
    * Database State
@@ -152,12 +153,15 @@ export default function App() {
     }
   };
 
-  /**
-   * # still workin man...
-    const lowToHigh = async () => {
-    sortQualityToggle
-    }
-   */
+  const toggleSort = async () => {
+  try {
+    const sortedItems = await sortQualityToggle(db, sortAscending);
+    setItems(sortedItems);
+    setSortAscending(!sortAscending); // Flip for next toggle
+  } catch (err) {
+    console.log("Failed to sort items", err);
+  }
+};
  
 
   /**
@@ -259,7 +263,7 @@ export default function App() {
        */}
       <Button
         title={editingId === null ? "Sort Low to High" : "Sort High to Low"}
-        onPress={lowToHigh}
+        onPress={toggleSort}
       />
 
       <FlatList
